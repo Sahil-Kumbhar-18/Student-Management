@@ -17,7 +17,6 @@ public class StudentReport {
     private String attendance;
     private String grade;
     private String AttendancePercent;
-
     @OneToOne
     private Student student;
 }

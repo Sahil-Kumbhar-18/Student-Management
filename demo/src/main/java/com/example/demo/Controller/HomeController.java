@@ -3,6 +3,9 @@ package com.example.demo.Controller;
 import com.example.demo.Repository.*;
 import com.example.demo.Security.JWT.JwtUtil;
 import com.example.demo.domain.*;
+import com.example.demo.dto.UserLoginDto;
+import com.example.demo.dto.UserSignupDto;
+import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,64 +35,26 @@ public class HomeController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody User user) {
-
-        if (userRepository.findByUsername(user.getUsername()) != null) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Username already exists");
+    public ResponseEntity<String> signup(@RequestBody UserSignupDto dto) {
+        try {
+            String message = userService.signup(dto);
+            return ResponseEntity.ok(message);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        User savedUser = userRepository.save(user);
-
-        if (user.getRole() == role.STUDENT) {
-            Student student = new Student();
-            student.setUser(savedUser);
-            studentRepo.save(student);
-        }
-
-        if (user.getRole() == role.ADMIN) {
-            Admin admin = new Admin();
-            admin.setUser(savedUser);
-            adminRepo.save(admin);
-        }
-
-        if (user.getRole() == role.TEACHER) {
-            Teacher teacher = new Teacher();
-            teacher.setUser(savedUser);
-            teacherRepo.save(teacher);
-        }
-
-        return ResponseEntity.ok("User registered successfully");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginUser) {
-
-        User dbUser = userRepository.findByUsername(loginUser.getUsername());
-
-        if (dbUser == null ||
-                !passwordEncoder.matches(loginUser.getPassword(), dbUser.getPassword())) {
-
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid username or password");
+    public ResponseEntity<?> login(@RequestBody UserLoginDto dto) {
+        try {
+            return ResponseEntity.ok(userService.login(dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
-
-        // Pass full User object
-        String token = jwtUtil.GenerateToken(dbUser);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "token", token,
-                        "role", dbUser.getRole(),
-                        "username", dbUser.getUsername()
-                )
-        );
     }
     @GetMapping("/admin")
     public String admin() {

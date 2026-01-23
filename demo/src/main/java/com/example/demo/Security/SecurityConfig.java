@@ -17,19 +17,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
-     @Bean
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-         http.csrf(csrf -> csrf.disable())
-                 .authorizeHttpRequests(req->req
-                         .requestMatchers("/signup", "/login").permitAll()
-                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                         .requestMatchers("/student/**").hasRole("STUDENT")
-                         .requestMatchers("/teacher/**").hasRole("TEACHER")
-                 )
-                 .sessionManagement(session->session
-                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/signup", "/login").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/student/**").hasRole("STUDENT")
+                        .requestMatchers("/api/teacher/**").hasRole("TEACHER")
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-         return http.build();
-     }
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 }
