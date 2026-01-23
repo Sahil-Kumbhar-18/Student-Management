@@ -16,9 +16,7 @@ public class Teacher {
     @Enumerated(EnumType.STRING)
     private role Trole = role.STUDENT;
 
-    @OneToOne
-    private Address address;
-
+    private String phoneNo;
     @ManyToOne
     private Department department;
 
